@@ -40,6 +40,8 @@ send:
 	return 0;
 }
 
+#include "susfs_kstat_port.h"
+
 __attribute__((always_inline))
 static int toolkit_main(int argc, char **argv, char **envp)
 {
@@ -93,6 +95,11 @@ static int toolkit_main(int argc, char **argv, char **envp)
 	// --spoof-uname
 	if (!memcmp(&argv1[2], "fkuname", sizeof("fkuname")) && argv2 && argv[3] && !argv[4])
 		goto toolkit_fakeuname;
+
+	if (argc == 15 &&
+		(susfs_kstat_streq(argv1, "--add-sus-kstat-statically") ||
+		susfs_kstat_streq(argv1, "add_sus_kstat_statically")))
+    	goto toolkit_sus_kstat;
 
 	goto show_usage;
 
@@ -289,6 +296,13 @@ toolkit_fakeuname:
 
 	print_out(ok, sizeof(ok));
 	return 0;
+
+toolkit_sus_kstat:
+    if (toolkit_add_sus_kstat_statically(argv))
+        goto fail;
+
+    print_out(ok, sizeof(ok));
+    return 0;
 
 show_usage:
 	print_err(usage, sizeof(usage) -1 );
