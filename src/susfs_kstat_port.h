@@ -12,6 +12,9 @@
 
 #define OZ_SUSFS_SUS_KSTAT 10050
 #define SUSFS_MAX_LEN_PATHNAME 256
+/* High bit identifies per-field hybrid mode; low 12 bits are overrides. */
+#define SUSFS_KSTAT_HYBRID (1U << 16)
+#define SUSFS_KSTAT_ALL_MASK 0x0fffU
 
 struct st_susfs_sus_kstat {
     int is_statically;
@@ -101,6 +104,8 @@ static int toolkit_add_sus_kstat_statically(char **argv)
     int64_t s;
     unsigned long path_len;
     uintptr_t marker = 0;
+    const int hybrid = susfs_kstat_streq(argv[1], "add_sus_kstat_hybrid") ||
+                       susfs_kstat_streq(argv[1], "--add-sus-kstat-hybrid");
 
     path_len = strlen(argv[2]);
     if (!path_len || path_len >= SUSFS_MAX_LEN_PATHNAME)
@@ -108,7 +113,7 @@ static int toolkit_add_sus_kstat_statically(char **argv)
     if (susfs_kstat_get_stat(argv[2], &sb) < 0)
         return 1;
 
-    info.is_statically = 1;
+    info.is_statically = hybrid ? (int)SUSFS_KSTAT_HYBRID : 1;
     info.target_ino = (unsigned long)sb.st_ino;
     for (unsigned long i = 0; i < path_len; ++i)
         info.target_pathname[i] = argv[2][i];
@@ -132,6 +137,7 @@ static int toolkit_add_sus_kstat_statically(char **argv)
         if (susfs_kstat_parse_u64(argv[idx], &u) ||                    \
             u > (uint64_t)(maxval)) return 1;                          \
         info.field = u;                                                \
+        if (hybrid) info.is_statically |= (1U << ((idx) - 3));          \
     }                                                                  \
 } while (0)
 #define SUSFS_SET_S(idx, field, minval, maxval) do {                   \
@@ -139,6 +145,7 @@ static int toolkit_add_sus_kstat_statically(char **argv)
         if (susfs_kstat_parse_i64(argv[idx], &s) ||                    \
             s < (int64_t)(minval) || s > (int64_t)(maxval)) return 1;  \
         info.field = s;                                                \
+        if (hybrid) info.is_statically |= (1U << ((idx) - 3));          \
     }                                                                  \
 } while (0)
 

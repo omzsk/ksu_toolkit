@@ -14,6 +14,8 @@ constexpr char usage[] =
 	"   --setver <? uint>\n"
 	"   --setflags <? uint>\n"
 	"   --fkuname \"6.18\" \"#0 SMP ...\"\n"
+	"   --add-sus-kstat-statically <path> <12 fields>\n"
+	"   --add-sus-kstat-hybrid <path> <12 fields>\n"
 	;
 
 char getinfo_buf_version[] = "ksuver: ??????\n";
@@ -100,6 +102,11 @@ static int toolkit_main(int argc, char **argv, char **envp)
 		(susfs_kstat_streq(argv1, "--add-sus-kstat-statically") ||
 		susfs_kstat_streq(argv1, "add_sus_kstat_statically")))
     	goto toolkit_sus_kstat;
+
+	if (argc == 15 &&
+		(susfs_kstat_streq(argv1, "add_sus_kstat_hybrid") ||
+		susfs_kstat_streq(argv1, "--add-sus-kstat-hybrid")))
+		goto toolkit_sus_kstat;
 
 	goto show_usage;
 
