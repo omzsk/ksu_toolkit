@@ -16,6 +16,7 @@ constexpr char usage[] =
 	"   --fkuname \"6.18\" \"#0 SMP ...\"\n"
 	"   --add-sus-kstat-statically <path> <12 fields>\n"
 	"   --add-sus-kstat-hybrid <path> <12 fields>\n"
+	"   --spoof-statfs <0/1> <size_gb> <block_s_id>\n"
 	;
 
 char getinfo_buf_version[] = "ksuver: ??????\n";
@@ -97,6 +98,10 @@ static int toolkit_main(int argc, char **argv, char **envp)
 	// --spoof-uname
 	if (!memcmp(&argv1[2], "fkuname", sizeof("fkuname")) && argv2 && argv[3] && !argv[4])
 		goto toolkit_fakeuname;
+
+	// --spoof-statfs (Thêm khối này)
+	if (!memcmp(&argv1[2], "poof-statfs", sizeof("poof-statfs")) && argv2 && argv[3])
+		goto toolkit_spoof_statfs;
 
 	if (argc == 15 &&
 		(susfs_kstat_streq(argv1, "--add-sus-kstat-statically") ||
@@ -310,6 +315,30 @@ toolkit_sus_kstat:
 
     print_out(ok, sizeof(ok));
     return 0;
+
+toolkit_spoof_statfs: {
+	struct st_susfs_spoof_statfs statfs_info;
+	__builtin_memset(&statfs_info, 0, sizeof(statfs_info));
+
+	statfs_info.enabled = dumb_atoi(argv2);
+	statfs_info.fake_total_gb = (unsigned long long)dumb_atoi(argv[3]);
+
+	if (argv[4]) {
+		unsigned int i = 0;
+		while (i < sizeof(statfs_info.target_s_id) - 1 && argv[4][i] != '\0') {
+			statfs_info.target_s_id[i] = argv[4][i];
+			i++;
+		}
+		statfs_info.target_s_id[i] = '\0';
+	}
+
+	ret = ksu_sys_reboot(CHANGE_SPOOF_STATFS, 0, (long)&statfs_info);
+	if (ret)
+		goto fail;
+
+	print_out(ok, sizeof(ok));
+	return 0;
+}
 
 show_usage:
 	print_err(usage, sizeof(usage) -1 );

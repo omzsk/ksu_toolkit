@@ -52,6 +52,13 @@ struct ksu_get_info_cmd {
 #define CHANGE_SPOOF_UNAME 10012 // spoof uname release
 #define CHANGE_KSUFLAGS 10013     // change ksuflags, do the bit calc on your own, 1 + 2 + 4 + 8 blah blah
 
+#define CHANGE_SPOOF_STATFS 10051
+
+struct st_susfs_spoof_statfs {
+	char target_s_id[32];
+	unsigned long long fake_total_gb;
+	int enabled;
+};
 /**
  *
  * NOTE on ksu flags:
