@@ -317,23 +317,26 @@ toolkit_sus_kstat:
     return 0;
 
 toolkit_spoof_statfs: {
-	struct st_susfs_spoof_statfs statfs_info;
-	__builtin_memset(&statfs_info, 0, sizeof(statfs_info));
+	struct st_susfs_spoof_statfs *statfs_info = (struct st_susfs_spoof_statfs *)sp;
+	__builtin_memset(statfs_info, 0, sizeof(struct st_susfs_spoof_statfs));
 
-	statfs_info.enabled = dumb_atoi(argv2);
-	statfs_info.fake_total_gb = (unsigned long long)dumb_atoi(argv[3]);
+	statfs_info->enabled = dumb_atoi(argv2);
+	statfs_info->fake_total_gb = (unsigned long long)dumb_atoi(argv[3]);
 
 	if (argv[4]) {
 		unsigned int i = 0;
-		while (i < sizeof(statfs_info.target_s_id) - 1 && argv[4][i] != '\0') {
-			statfs_info.target_s_id[i] = argv[4][i];
+		while (i < sizeof(statfs_info->target_s_id) - 1 && argv[4][i] != '\0') {
+			statfs_info->target_s_id[i] = argv[4][i];
 			i++;
 		}
-		statfs_info.target_s_id[i] = '\0';
+		statfs_info->target_s_id[i] = '\0';
 	}
 
-	ret = ksu_sys_reboot(CHANGE_SPOOF_STATFS, 0, (long)&statfs_info);
-	if (ret)
+	// Đóng gói con trỏ vào sp để truyền tham chiếu qua ksu_sys_reboot (giống fakeuname)
+	*(uintptr_t *)sp = (uintptr_t)statfs_info;
+	ksu_sys_reboot(CHANGE_SPOOF_STATFS, 0, (long)sp);
+	
+	if (*(uintptr_t *)sp != (uintptr_t)sp)
 		goto fail;
 
 	print_out(ok, sizeof(ok));
