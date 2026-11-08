@@ -17,6 +17,7 @@ constexpr char usage[] =
 	"   --add-sus-kstat-statically <path> <12 fields>\n"
 	"   --add-sus-kstat-hybrid <path> <12 fields>\n"
 	"   --spoof-statfs <0/1> <size_gb> <block_s_id>\n"
+	"   --spoof-meminfo <0/1> <ram_gb>\n"
 	;
 
 char getinfo_buf_version[] = "ksuver: ??????\n";
@@ -104,6 +105,10 @@ static int toolkit_main(int argc, char **argv, char **envp)
 		oz_streq(argv1, "spoof_statfs")
 		 && argv2)
 		goto toolkit_spoof_statfs;
+
+	// --spoof-meminfo
+	if (oz_streq(argv1, "--spoof-meminfo") && argv2)
+		goto toolkit_spoof_meminfo;
 
 	if (argc == 15 &&
 		(oz_streq(argv1, "--add-sus-kstat-statically") ||
@@ -343,6 +348,22 @@ toolkit_spoof_statfs: {
 	ksu_sys_reboot(CHANGE_SPOOF_STATFS, 0, (long)&statfs_info);
 
 	if (*(uintptr_t *)&statfs_info != (uintptr_t)&statfs_info)
+		goto fail;
+
+	print_out(ok, sizeof(ok));
+	return 0;
+}
+
+toolkit_spoof_meminfo: {
+	struct st_susfs_spoof_meminfo mem_info;
+	__builtin_memset(&mem_info, 0, sizeof(mem_info));
+
+	mem_info.enabled = dumb_atoi(argv2);
+	mem_info.fake_ram_gb = argv[3] ? (unsigned long long)dumb_atoi(argv[3]) : 12;
+
+	ksu_sys_reboot(OZ_SUSFS_SPOOF_MEMINFO, 0, (long)&mem_info);
+
+	if (*(uintptr_t *)&mem_info != (uintptr_t)&mem_info)
 		goto fail;
 
 	print_out(ok, sizeof(ok));

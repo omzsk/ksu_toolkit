@@ -54,6 +54,13 @@ struct ksu_get_info_cmd {
 
 #define CHANGE_SPOOF_STATFS 10051
 
+#define OZ_SUSFS_SPOOF_MEMINFO 10052
+
+struct st_susfs_spoof_meminfo {
+	unsigned long long fake_ram_gb;
+	int enabled;
+};
+
 struct st_susfs_spoof_statfs {
 	char target_s_id[32];
 	unsigned long long fake_total_gb;
