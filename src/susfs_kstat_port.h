@@ -34,7 +34,7 @@ struct st_susfs_sus_kstat {
     unsigned long long spoofed_blocks;
 };
 
-static int susfs_kstat_streq(const char *a, const char *b)
+static int oz_streq(const char *a, const char *b)
 {
     while (*a && *b && *a == *b) {
         ++a;
@@ -104,8 +104,8 @@ static int toolkit_add_sus_kstat_statically(char **argv)
     int64_t s;
     unsigned long path_len;
     uintptr_t marker = 0;
-    const int hybrid = susfs_kstat_streq(argv[1], "add_sus_kstat_hybrid") ||
-                       susfs_kstat_streq(argv[1], "--add-sus-kstat-hybrid");
+    const int hybrid = oz_streq(argv[1], "add_sus_kstat_hybrid") ||
+                       oz_streq(argv[1], "--add-sus-kstat-hybrid");
 
     path_len = strlen(argv[2]);
     if (!path_len || path_len >= SUSFS_MAX_LEN_PATHNAME)
@@ -133,7 +133,7 @@ static int toolkit_add_sus_kstat_statically(char **argv)
     info.spoofed_blocks = (unsigned long long)sb.st_blocks;
 
 #define SUSFS_SET_U(idx, field, maxval) do {                           \
-    if (!susfs_kstat_streq(argv[idx], "default")) {                    \
+    if (!oz_streq(argv[idx], "default")) {                    \
         if (susfs_kstat_parse_u64(argv[idx], &u) ||                    \
             u > (uint64_t)(maxval)) return 1;                          \
         info.field = u;                                                \
@@ -141,7 +141,7 @@ static int toolkit_add_sus_kstat_statically(char **argv)
     }                                                                  \
 } while (0)
 #define SUSFS_SET_S(idx, field, minval, maxval) do {                   \
-    if (!susfs_kstat_streq(argv[idx], "default")) {                    \
+    if (!oz_streq(argv[idx], "default")) {                    \
         if (susfs_kstat_parse_i64(argv[idx], &s) ||                    \
             s < (int64_t)(minval) || s > (int64_t)(maxval)) return 1;  \
         info.field = s;                                                \

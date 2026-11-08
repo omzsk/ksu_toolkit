@@ -100,17 +100,19 @@ static int toolkit_main(int argc, char **argv, char **envp)
 		goto toolkit_fakeuname;
 
 	// --spoof-statfs (Thêm khối này)
-	if (!strcmp(argv1, "--spoof-statfs") && argv2)
+	if (oz_streq(argv1, "--spoof-statfs") ||
+		oz_streq(argv1, "spoof_statfs")
+		 && argv2)
 		goto toolkit_spoof_statfs;
 
 	if (argc == 15 &&
-		(susfs_kstat_streq(argv1, "--add-sus-kstat-statically") ||
-		susfs_kstat_streq(argv1, "add_sus_kstat_statically")))
+		(oz_streq(argv1, "--add-sus-kstat-statically") ||
+		oz_streq(argv1, "add_sus_kstat_statically")))
     	goto toolkit_sus_kstat;
 
 	if (argc == 15 &&
-		(susfs_kstat_streq(argv1, "add_sus_kstat_hybrid") ||
-		susfs_kstat_streq(argv1, "--add-sus-kstat-hybrid")))
+		(oz_streq(argv1, "add_sus_kstat_hybrid") ||
+		oz_streq(argv1, "--add-sus-kstat-hybrid")))
 		goto toolkit_sus_kstat;
 
 	goto show_usage;
