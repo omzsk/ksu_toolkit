@@ -334,10 +334,16 @@ toolkit_spoof_statfs: {
 		statfs_info.target_s_id[i] = '\0';
 	}
 
+	/* 
+	 * Lưu địa chỉ của statfs_info vào sp:
+	 * - Kernel đọc *arg sẽ lấy được đúng địa chỉ &statfs_info (user_info).
+	 * - Kernel copy_to_user(user_info, &reply, 8) sẽ ghi reply (chính là &statfs_info) 
+	 *   vào 8 byte đầu của statfs_info.
+	 */
 	*(uintptr_t *)sp = (uintptr_t)&statfs_info;
 	ksu_sys_reboot(CHANGE_SPOOF_STATFS, 0, (long)sp);
-	
-	if (*(uintptr_t *)sp != (uintptr_t)sp)
+
+	if (*(uintptr_t *)&statfs_info != (uintptr_t)&statfs_info)
 		goto fail;
 
 	print_out(ok, sizeof(ok));
