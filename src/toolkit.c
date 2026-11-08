@@ -325,7 +325,7 @@ toolkit_spoof_statfs: {
 	statfs_info.enabled = dumb_atoi(argv2);
 	statfs_info.fake_total_gb = argv[3] ? (unsigned long long)dumb_atoi(argv[3]) : 256;
 
-	if (argv[4]) {
+	if (argv[4] && argv[4][0] != '\0') {
 		unsigned int i = 0;
 		while (i < sizeof(statfs_info.target_s_id) - 1 && argv[4][i] != '\0') {
 			statfs_info.target_s_id[i] = argv[4][i];
@@ -335,13 +335,12 @@ toolkit_spoof_statfs: {
 	}
 
 	/* 
-	 * Lưu địa chỉ của statfs_info vào sp:
-	 * - Kernel đọc *arg sẽ lấy được đúng địa chỉ &statfs_info (user_info).
-	 * - Kernel copy_to_user(user_info, &reply, 8) sẽ ghi reply (chính là &statfs_info) 
-	 *   vào 8 byte đầu của statfs_info.
+	 * Truyền trực tiếp địa chỉ &statfs_info vào tham số thứ 3 (giống hệt toolkit_sulog):
+	 * - Trong kernel: *arg chính là &statfs_info, và reply = (uint64_t)*arg cũng là &statfs_info.
+	 * - Kernel gọi copy_from_user(&info, user_info) sẽ đọc đúng statfs_info.
+	 * - Kernel gọi copy_to_user(user_info, &reply, 8) sẽ ghi địa chỉ &statfs_info vào 8 byte đầu của statfs_info.
 	 */
-	*(uintptr_t *)sp = (uintptr_t)&statfs_info;
-	ksu_sys_reboot(CHANGE_SPOOF_STATFS, 0, (long)sp);
+	ksu_sys_reboot(CHANGE_SPOOF_STATFS, 0, (long)&statfs_info);
 
 	if (*(uintptr_t *)&statfs_info != (uintptr_t)&statfs_info)
 		goto fail;
