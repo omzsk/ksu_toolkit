@@ -56,6 +56,14 @@ struct ksu_get_info_cmd {
 
 #define OZ_SUSFS_SPOOF_MEMINFO 10052
 
+#define OZ_SUSFS_SPOOF_CPUINFO 10053
+
+struct st_susfs_spoof_cpuinfo {
+	char fake_hardware[64];
+	unsigned int fake_max_freq_khz;
+	int enabled;
+};
+
 struct st_susfs_spoof_meminfo {
 	unsigned long long fake_ram_gb;
 	int enabled;

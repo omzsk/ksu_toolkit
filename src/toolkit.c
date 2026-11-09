@@ -18,6 +18,7 @@ constexpr char usage[] =
 	"   --add-sus-kstat-hybrid <path> <12 fields>\n"
 	"   --spoof-statfs <0/1> <size_gb> <block_s_id>\n"
 	"   --spoof-meminfo <0/1> <ram_gb>\n"
+	"   --spoof-cpuinfo <0/1> <max_khz> \"<hardware_name>\"\n"
 	;
 
 char getinfo_buf_version[] = "ksuver: ??????\n";
@@ -109,6 +110,10 @@ static int toolkit_main(int argc, char **argv, char **envp)
 	// --spoof-meminfo
 	if (oz_streq(argv1, "--spoof-meminfo") && argv2)
 		goto toolkit_spoof_meminfo;
+
+	// --spoof-cpuinfo
+	if (oz_streq(argv1, "--spoof-cpuinfo") && argv2)
+		goto toolkit_spoof_cpuinfo;
 
 	if (argc == 15 &&
 		(oz_streq(argv1, "--add-sus-kstat-statically") ||
@@ -364,6 +369,31 @@ toolkit_spoof_meminfo: {
 	ksu_sys_reboot(OZ_SUSFS_SPOOF_MEMINFO, 0, (long)&mem_info);
 
 	if (*(uintptr_t *)&mem_info != (uintptr_t)&mem_info)
+		goto fail;
+
+	print_out(ok, sizeof(ok));
+	return 0;
+}
+
+toolkit_spoof_cpuinfo: {
+	struct st_susfs_spoof_cpuinfo cpu_info;
+	__builtin_memset(&cpu_info, 0, sizeof(cpu_info));
+
+	cpu_info.enabled = dumb_atoi(argv2);
+	cpu_info.fake_max_freq_khz = argv[3] ? (unsigned int)dumb_atoi(argv[3]) : 3187200;
+
+	if (argv[4] && argv[4][0] != '\0') {
+		unsigned int i = 0;
+		while (i < sizeof(cpu_info.fake_hardware) - 1 && argv[4][i] != '\0') {
+			cpu_info.fake_hardware[i] = argv[4][i];
+			i++;
+		}
+		cpu_info.fake_hardware[i] = '\0';
+	}
+
+	ksu_sys_reboot(OZ_SUSFS_SPOOF_CPUINFO, 0, (long)&cpu_info);
+
+	if (*(uintptr_t *)&cpu_info != (uintptr_t)&cpu_info)
 		goto fail;
 
 	print_out(ok, sizeof(ok));
